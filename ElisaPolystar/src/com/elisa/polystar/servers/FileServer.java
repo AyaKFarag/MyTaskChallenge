@@ -9,8 +9,21 @@ public class FileServer {
         Server draculaServer = ServerFactory.createServer("dracula", 6501);
         Server frankensteinServer = ServerFactory.createServer("frankenstein", 6500);
 
-        // Start the servers
-        new Thread(draculaServer::start).start();
-        new Thread(frankensteinServer::start).start();
+        // Start the servers using separate threads
+        new Thread(() -> {
+            try {
+                draculaServer.start();
+            } catch (Exception e) {
+                System.err.println("Error starting Dracula server: " + e.getMessage());
+            }
+        }).start();
+
+        new Thread(() -> {
+            try {
+                frankensteinServer.start();
+            } catch (Exception e) {
+                System.err.println("Error starting Frankenstein server: " + e.getMessage());
+            }
+        }).start();
     }
 }

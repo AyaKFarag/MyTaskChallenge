@@ -1,0 +1,7 @@
+com/elisa/polystar/client/WordCountClient.class
+com/elisa/polystar/factory/ServerFactory.class
+com/elisa/polystar/servers/FrankensteinServer.class
+com/elisa/polystar/servers/Server.class
+com/elisa/polystar/servers/ServerHelper.class
+com/elisa/polystar/servers/FileServer.class
+com/elisa/polystar/servers/DraculaServer.class

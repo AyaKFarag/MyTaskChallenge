@@ -1,13 +1,13 @@
 package com.elisa.polystar.servers;
 
-import java.io.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 public class FrankensteinServer implements Server {
+    private static final Logger logger = LoggerFactory.getLogger(FrankensteinServer.class);
     private final int port;
     private final String fileName;
 
@@ -19,10 +19,10 @@ public class FrankensteinServer implements Server {
     @Override
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Frankenstein server is running on port " + port);
-            Server.serverStart(serverSocket, fileName);
+            logger.info("Frankenstein server is running on port {}", port);
+            ServerHelper.serverStart(serverSocket, fileName);
         } catch (IOException e) {
-            System.err.println("Error in FrankensteinServer: " + e.getMessage());
+            logger.error("Error in FrankensteinServer: {}", e.getMessage(), e);
         }
     }
 }

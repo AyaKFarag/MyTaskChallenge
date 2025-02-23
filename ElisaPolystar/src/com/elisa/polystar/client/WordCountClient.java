@@ -1,7 +1,7 @@
 package com.elisa.polystar.client;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.Socket;
@@ -12,18 +12,18 @@ import java.util.LinkedHashMap;
 
 public class WordCountClient {
 
-    private static final int port1 = 6500;
-    private static final int port2 = 6501;
-    private static final String host = "localhost";
+    private static final int PORT1 = 6500;
+    private static final int PORT2 = 6501;
+    private static final String HOST = "localhost";
 
     private static final ConcurrentHashMap<String, Integer> data = new ConcurrentHashMap<>();
 
-    // Initialize SLF4J logger
+    // Java built-in Logger
     private static final Logger logger = Logger.getLogger(WordCountClient.class.getName());
 
     public static void main(String[] args) {
-        Thread client1 = new Thread(() -> readFromServer(port1));
-        Thread client2 = new Thread(() -> readFromServer(port2));
+        Thread client1 = new Thread(() -> readFromServer(PORT1));
+        Thread client2 = new Thread(() -> readFromServer(PORT2));
 
         client1.start();
         client2.start();
@@ -32,7 +32,8 @@ public class WordCountClient {
             client1.join();
             client2.join();
         } catch (InterruptedException e) {
-            logger.severe("Thread interrupted: "+ e.getMessage());
+            logger.log(Level.SEVERE, "Thread interrupted", e);
+            Thread.currentThread().interrupt();
         }
 
         // Process results after both threads finish
@@ -40,7 +41,7 @@ public class WordCountClient {
     }
 
     private static void readFromServer(int port) {
-        try (Socket serverSocket = new Socket(host, port);
+        try (Socket serverSocket = new Socket(HOST, port);
              BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()))) {
 
             String line;
@@ -49,13 +50,12 @@ public class WordCountClient {
                 for (String word : tokens) {
                     word = word.toLowerCase().replaceAll("[^a-zA-Z'-]", ""); // Clean up word
                     if (!word.isEmpty()) {
-//                        data.merge(word, 1, Integer::sum);
-                        data.compute(word, (key, val) -> val == null ? 1 : val + 1);
+                        data.merge(word, 1, Integer::sum);
                     }
                 }
             }
         } catch (Exception e) {
-            logger.severe("Error connecting to server on port : " + port + " " + e);
+            logger.log(Level.SEVERE, "Error connecting to server on port: " + port, e);
         }
     }
 
@@ -68,7 +68,7 @@ public class WordCountClient {
                         (oldValue, newValue) -> oldValue, LinkedHashMap::new));
 
         System.out.println("The 5 most common words in the two files!");
-        result.forEach((word, count) -> System.out.println("[{" + word + "}] : {" + count + "}"));
-
+        result.forEach((word, count) -> System.out.println("[" + word + "] : " + count));
     }
+
 }

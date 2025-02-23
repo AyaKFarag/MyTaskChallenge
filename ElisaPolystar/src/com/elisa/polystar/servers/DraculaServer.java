@@ -1,10 +1,13 @@
 package com.elisa.polystar.servers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.ServerSocket;
 
 public class DraculaServer implements Server {
+    private static final Logger logger = LoggerFactory.getLogger(DraculaServer.class);
     private final int port;
     private final String fileName;
 
@@ -16,13 +19,12 @@ public class DraculaServer implements Server {
     @Override
     public void start() {
         try (ServerSocket serverSocket = new ServerSocket(port)) {
-            System.out.println("Dracula server is running on port " + port);
-            Server.serverStart(serverSocket, fileName);
-            return;
+            logger.info("Dracula server is running on port {}", port);
+
+            // Assuming serverStart is in another class, e.g., ServerHelper
+            ServerHelper.serverStart(serverSocket, fileName);
         } catch (IOException e) {
-            System.err.println("Error in DraculaServer: " + e.getMessage());
+            logger.error("Error in DraculaServer: {}", e.getMessage(), e);
         }
     }
-
-
 }
