@@ -1,13 +1,13 @@
-package com.elisa.polystar.servers;
+package com.elisa.polystar.server;
 
-import com.elisa.polystar.factory.ServerFactory;
+import com.elisa.polystar.server.factory.FileServerFactory;
 
-public class FileServer {
+public class ServerRunner {
 
     public static void main(String[] args) {
         // Create servers using the factory
-        Server draculaServer = ServerFactory.createServer("dracula", 6501);
-        Server frankensteinServer = ServerFactory.createServer("frankenstein", 6500);
+        Server draculaServer = FileServerFactory.createServer("dracula");
+        Server frankensteinServer = FileServerFactory.createServer("frankenstein");
 
         // Start the servers using separate threads
         new Thread(() -> {

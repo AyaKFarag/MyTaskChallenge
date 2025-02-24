@@ -9,21 +9,42 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.LinkedHashMap;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class WordCountClient {
 
-    private static final int PORT1 = 6500;
-    private static final int PORT2 = 6501;
-    private static final String HOST = "localhost";
-
-    public static final ConcurrentHashMap<String, Integer> data = new ConcurrentHashMap<>();
-
-    // Java built-in Logger
     private static final Logger logger = Logger.getLogger(WordCountClient.class.getName());
+    private static final ConcurrentHashMap<String, Integer> data = new ConcurrentHashMap<>();
+    private static final String host;
+    private static final int port1;
+    private static final int port2;
+
+    public static final String PROPERTIES = "config.properties";
+    public static final String CLEAN_WORD_BOUNDARIES_REGEX = "^[^a-zA-Z']+|[^a-zA-Z']+$";
+
+    // Load configuration properties
+    static {
+        Properties config = new Properties();
+        try (InputStream input = WordCountClient.class.getClassLoader().getResourceAsStream(PROPERTIES)) {
+            if (input == null) {
+                throw new IOException("Unable to find config.properties file.");
+            }
+            config.load(input);
+            host = config.getProperty("server.host", "localhost");
+            port1 = Integer.parseInt(config.getProperty("server.port1", "6500"));
+            port2 = Integer.parseInt(config.getProperty("server.port2", "6501"));
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "Failed to load configuration", ex);
+            throw new RuntimeException("Failed to load configuration", ex);
+        }
+    }
 
     public static void main(String[] args) {
-        Thread client1 = new Thread(() -> readFromServer(PORT1));
-        Thread client2 = new Thread(() -> readFromServer(PORT2));
+        Thread client1 = new Thread(() -> readFromServer(port1), "Client-Port-" + port1);
+        Thread client2 = new Thread(() -> readFromServer(port2), "Client-Port-" + port2);
+
 
         client1.start();
         client2.start();
@@ -40,26 +61,39 @@ public class WordCountClient {
         mostCommonWords(data, 5);
     }
 
-     static void readFromServer(int port) {
-        try (Socket serverSocket = new Socket(HOST, port);
+    static void readFromServer(int port) {
+        ConcurrentHashMap<String, Integer> localData = new ConcurrentHashMap<>();
+
+        try (Socket serverSocket = new Socket(host, port);
              BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()))) {
 
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 String[] tokens = line.split("\\s+");
                 for (String word : tokens) {
-                    word = word.toLowerCase().replaceAll("[^a-zA-Z'-]", ""); // Clean up word
+                    word = word.toLowerCase().replaceAll(CLEAN_WORD_BOUNDARIES_REGEX, ""); // Trim punctuation
                     if (!word.isEmpty()) {
-                        data.merge(word, 1, Integer::sum);
+                        localData.merge(word, 1, Integer::sum);
                     }
                 }
             }
-        } catch (Exception e) {
+
+            // Merge local data into global map
+            synchronized (data) {
+                localData.forEach((key, value) -> data.merge(key, value, Integer::sum));
+            }
+
+        } catch (IOException e) {
             logger.log(Level.SEVERE, "Error connecting to server on port: " + port, e);
         }
     }
 
     public static Map<String, Integer> mostCommonWords(Map<String, Integer> input, int limit) {
+        if (input.isEmpty()) {
+            logger.info("No words found. The input data is empty.");
+            return Map.of();
+        }
+
         Map<String, Integer> result = input.entrySet().stream()
                 .sorted((word1, word2) -> Integer.compare(word2.getValue(), word1.getValue()))
                 .limit(limit)
@@ -67,8 +101,9 @@ public class WordCountClient {
                         Map.Entry::getKey, Map.Entry::getValue,
                         (oldValue, newValue) -> oldValue, LinkedHashMap::new));
 
-        System.out.println("The 5 most common words in the two files!");
-        result.forEach((word, count) -> System.out.println("[" + word + "] : " + count));
+        logger.info("The " + limit + " most common words are:");
+        result.forEach((word, count) -> logger.info("[" + word + "] : " + count));
+
         return result;
     }
 

@@ -15,7 +15,7 @@ lsof -ti:6501 | xargs kill -9 2>/dev/null
 
 # Run the FileServer class in the background and capture its PID
 echo "Starting the FileServer..."
-mvn exec:java -Dexec.mainClass="com.elisa.polystar.servers.FileServer" &
+mvn exec:java -Dexec.mainClass="com.elisa.polystar.server.ServerRunner" &
 SERVER_PID=$!
 
 # Wait for server to be fully ready (checking ports 6500 and 6501)
