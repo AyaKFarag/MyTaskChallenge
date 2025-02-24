@@ -16,7 +16,7 @@ public class WordCountClient {
     private static final int PORT2 = 6501;
     private static final String HOST = "localhost";
 
-    private static final ConcurrentHashMap<String, Integer> data = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, Integer> data = new ConcurrentHashMap<>();
 
     // Java built-in Logger
     private static final Logger logger = Logger.getLogger(WordCountClient.class.getName());
@@ -40,7 +40,7 @@ public class WordCountClient {
         mostCommonWords(data, 5);
     }
 
-    private static void readFromServer(int port) {
+     static void readFromServer(int port) {
         try (Socket serverSocket = new Socket(HOST, port);
              BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(serverSocket.getInputStream()))) {
 
@@ -59,7 +59,7 @@ public class WordCountClient {
         }
     }
 
-    public static void mostCommonWords(Map<String, Integer> input, int limit) {
+    public static Map<String, Integer> mostCommonWords(Map<String, Integer> input, int limit) {
         Map<String, Integer> result = input.entrySet().stream()
                 .sorted((word1, word2) -> Integer.compare(word2.getValue(), word1.getValue()))
                 .limit(limit)
@@ -69,6 +69,7 @@ public class WordCountClient {
 
         System.out.println("The 5 most common words in the two files!");
         result.forEach((word, count) -> System.out.println("[" + word + "] : " + count));
+        return result;
     }
 
 }

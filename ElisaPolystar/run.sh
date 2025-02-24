@@ -28,4 +28,8 @@ done
 echo "📊 Running client..."
 mvn exec:java -Dexec.mainClass="com.elisa.polystar.client.WordCountClient"
 
-# Stop the server after client fi
+# Stop the server after client finishes
+echo "🛑 Stopping the server..."
+kill $SERVER_PID || { echo "❌ Failed to stop the server"; exit 1; }
+
+echo "✅ Process completed successfully!"
